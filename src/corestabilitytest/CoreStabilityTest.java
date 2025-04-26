@@ -17,26 +17,6 @@ public class CoreStabilityTest
      */
     static LinkedList<Integer> bitfield(int i, int n)
     {
-        /*
-        String binaryString = Integer.toBinaryString(i); // Convert to binary string
-        char[] binaryArray = binaryString.toCharArray(); // Break the string into an array
-        LinkedList<Integer> x = new LinkedList<>();
-        
-        // Convert the array to a LinkedList<Integer>
-        for (char currentDigit : binaryArray)
-        {
-            int integerValue = (int)currentDigit; // Cast char to int
-            x.add(integerValue);
-        }
-        
-        
-        while (x.size() < n)
-            x.addFirst(0);
-        
-        return x;
-        
-        */
-        
         // Direct copy from Python implementation
         String binaryString = Integer.toBinaryString(i);
         LinkedList<Integer> x = new LinkedList<>();
@@ -102,7 +82,7 @@ public class CoreStabilityTest
             // Calculate utility
             for (int j : Seen)
                 u += Win[i][j];
-            
+
             // If the determined utiliy is not greater than the existing utility,
             //  the coalition does not block
             if (u <= utility.get(i))
@@ -177,11 +157,6 @@ public class CoreStabilityTest
         
         for (int i = 0; i < k; i++)
         {
-            int size = T.get(i).size();
-            
-            // Shorthand way to add sets from 0 to 2^size
-            subsetCounts.add(IntStream.range(0, (int) Math.pow(2, size)).boxed().collect(Collectors.toCollection(LinkedList::new)));
-            
             for (int a : T.get(i))
             {
                 double u = 0; // Utility
@@ -191,9 +166,14 @@ public class CoreStabilityTest
                     for (int b : T.get(r))
                         u += Win[a][b]; // Update agent's utility for each matchup
                 
-                if (a < utility.size())
+                if (a < utility.size()) // Don't attempt an out-of-bounds assignment
                     utility.set(a, u);
             }
+            
+            int size = T.get(i).size();
+            
+            // Shorthand way to add sets from 0 to 2^size
+            subsetCounts.add(IntStream.range(0, (int) Math.pow(2, size)).boxed().collect(Collectors.toCollection(LinkedList::new)));
         }
         
         // For each tier, determine if that tier might form part of a blocking coalition
@@ -209,16 +189,11 @@ public class CoreStabilityTest
             // Pick one value from each nextSubsetMarkers sublist
             for (int j = 0; j < k; j++)
                 if (j == i)
-                {
-                    LinkedList<Integer> zeroList = new LinkedList<>();
-                    zeroList.add(0);
-                    
-                    nextSubsetMarkers.add(zeroList);
-                }
+                    nextSubsetMarkers.addLast(new LinkedList<>(Arrays.asList(0)));
                 else
-                    nextSubsetMarkers.add(subsetCounts.get(j));
-
-
+                    nextSubsetMarkers.addLast(subsetCounts.get(j));
+            
+            // Get all subsets from Cartesian Product
             LinkedList<LinkedList<Integer>> subsets = findCartesianProduct(nextSubsetMarkers);
             
             for (LinkedList<Integer> subset : subsets)
@@ -245,26 +220,26 @@ public class CoreStabilityTest
                     }
                 
                 // Test for blocking at other positions in the list
-                for (int j = 0; j < k; j++)
+                for (int j = 0; j < k; j++) // For each tier 
                 {
                     boolean changed = false;
                     
-                    for (int a : T.get(j))
+                    for (int a : T.get(j)) // For each agent in tier j
                     {
-                        if (! Seen.contains(a))
+                        if (! Seen.contains(a)) // If a is not seen
                         {
                             changed = true;
                             Seen.add(a);
                         }
-                        
-                        if (changed)
-                            if (! alreadySeen.equals(Seen))
-                                if (strongBlockIfSeen(C, Seen, Win, utility))
-                                {
-                                    System.out.println("Blocked by " + C + "\nC wants to move to tier " + (j+1));
-                                    return false;
-                                }
                     }
+                        
+                    if (changed)
+                        if (! alreadySeen.equals(Seen))
+                            if (strongBlockIfSeen(C, Seen, Win, utility))
+                            {
+                                System.out.println("Blocked by " + C + "\nC wants to move to tier " + (j + 1));
+                                return false;
+                            }
                 }
             }
         }
@@ -401,7 +376,7 @@ public class CoreStabilityTest
         
         if (isCoreStable(tierList, winMatrix, n, k))
         {
-            System.out.println("Test case 1.1 failed");
+            System.out.println("Test case 2.1 failed");
             return false;
         }
         
@@ -432,7 +407,7 @@ public class CoreStabilityTest
         
         if (! isCoreStable(tierList, winMatrix, n, k))
         {
-            System.out.println("Test case 1.2 failed");
+            System.out.println("Test case 2.2 failed");
             return false;
         }
         
